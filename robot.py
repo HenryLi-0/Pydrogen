@@ -1,6 +1,4 @@
-import wpilib
-
-from library.CommandRobot import *
+from library.CommandRobot import CommandRobot
 
 
 class Robot(CommandRobot):

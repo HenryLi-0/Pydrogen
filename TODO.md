@@ -11,11 +11,11 @@ Setup
 
 Basic Code
 - structure files
-- basic command robot structure
-    - or just anything
 - add dependencies and libraries
     - [phoenix6](https://v6.docs.ctr-electronics.com/en/latest/docs/installation/installation-frc.html)
     - [robotpy](https://robotpy.readthedocs.io/projects/robotpy/en/stable/)
+- basic command robot structure
+    - or just anything
 - io and stuff
 - basic swerve
 

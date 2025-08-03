@@ -1,5 +1,20 @@
-import wpilib
-import ntcore
+from phoenix6.status_signal import StatusSignal
+from phoenix6.hardware import CANcoder
+from phoenix6.hardware import TalonFX
+# import com.reduxrobotics.sensors.canandgyro.Canandgyro;
+# import com.revrobotics.REVLibError;
+# import com.revrobotics.spark.SparkBase;
+# import com.studica.frc.AHRS;
+from hal import PowerDistributionFaults
+from ntcore import NetworkTable
+from ntcore import NetworkTableInstance
+from ntcore import StringArrayPublisher
+from wpilib import DriverStation
+from wpilib import DutyCycleEncoder
+from wpilib import PowerDistribution
+from typing import Callable
+# import org.photonvision.PhotonCamera;
+# import org.sciborgs1155.robot.Ports;
 
 '''
 ref: https://github.com/SciBorgs/Hydrogen/blob/main/src/main/java/org/sciborgs1155/lib/FaultLogger.java
@@ -20,11 +35,11 @@ class Fault:
     return self.name + ": " + self.desc
     
 class Alerts:
-  table:ntcore.NetworkTable = None
-  errors:ntcore.StringArrayPublisher = None
-  warnings:ntcore.StringArrayPublisher = None
-  infos:ntcore.StringArrayPublisher = None
-  def __init__(base:ntcore.NetworkTable, name:str):
+  table:NetworkTable = None
+  errors:StringArrayPublisher = None
+  warnings:StringArrayPublisher = None
+  infos:StringArrayPublisher = None
+  def __init__(base:NetworkTable, name:str):
     Alerts.table = base.getSubTable(name)
     Alerts.table.getStringTopic(".type").publish().set("Alerts")
     Alerts.errors = Alerts.table.getStringArrayTopic("errors").publish()
@@ -46,7 +61,7 @@ class Alerts:
         
 
 class FaultLogger:
-  '''  
+  '''
   FaultLogger allows for faults to be logged and displayed.
   '''
   # DATA
@@ -55,7 +70,7 @@ class FaultLogger:
   totalFaults:set[Fault] = []
 
   # NETWORK TABLES
-  base:ntcore.NetworkTable = ntcore.NetworkTableInstance.getDefault().getTable("Faults");
+  base:NetworkTable = NetworkTableInstance.getDefault().getTable("Faults");
   activeAlerts:Alerts = Alerts(base, "Active Faults")
   totalAlerts:Alerts = Alerts(base, "Total Faults")
 

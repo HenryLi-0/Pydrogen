@@ -1,11 +1,11 @@
-import wpilib
+from wpilib import TimedRobot
 from commands2 import CommandScheduler
 
 '''
 ref: https://github.com/SciBorgs/Hydrogen/blob/main/src/main/java/org/sciborgs1155/lib/CommandRobot.java
 '''
 
-class CommandRobot(wpilib.TimedRobot):
+class CommandRobot(TimedRobot):
     '''
     A command robot.
     '''
