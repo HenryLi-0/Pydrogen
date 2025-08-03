@@ -3,7 +3,10 @@ from phoenix6.orchestra import Orchestra
 from phoenix6.status_signal import StatusSignal
 from phoenix6.configs import AudioConfigs
 from phoenix6.hardware import TalonFX
-from wpilib import DriverStation
+
+'''
+ref: https://github.com/SciBorgs/Hydrogen/blob/main/src/main/java/org/sciborgs1155/lib/TalonUtils.java
+'''
 
 class TalonUtils:
     orchestra:Orchestra

@@ -4,6 +4,10 @@ from phoenix6.configs import TalonFXConfiguration
 from library.FaultLogger import FaultLogger
 from library.TalonUtils import TalonUtils
 
+'''
+ref: https://github.com/SciBorgs/Hydrogen/blob/main/src/main/java/org/sciborgs1155/lib/SimpleMotor.java
+'''
+
 class SimpleMotor:
     '''
     Simple Motor that utilizes a two callables for setting power and provides no feedback.

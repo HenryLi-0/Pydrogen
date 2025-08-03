@@ -2,9 +2,7 @@ import wpilib
 import ntcore
 
 '''
-[ref](https://github.com/SciBorgs/Hydrogen/blob/main/src/main/java/org/sciborgs1155/lib/FaultLogger.java)
-
-FaultLogger allows for faults to be logged and displayed.
+ref: https://github.com/SciBorgs/Hydrogen/blob/main/src/main/java/org/sciborgs1155/lib/FaultLogger.java
 '''
 
 class FaultType:
@@ -48,9 +46,7 @@ class Alerts:
         
 
 class FaultLogger:
-  '''
-  [ref](https://github.com/SciBorgs/Hydrogen/blob/main/src/main/java/org/sciborgs1155/lib/FaultLogger.java)
-  
+  '''  
   FaultLogger allows for faults to be logged and displayed.
   '''
   # DATA
