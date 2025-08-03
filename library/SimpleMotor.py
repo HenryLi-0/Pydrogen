@@ -2,6 +2,7 @@ from typing import Callable
 from phoenix6.hardware import TalonFX
 from phoenix6.configs import TalonFXConfiguration
 from library.FaultLogger import FaultLogger
+from library.TalonUtils import TalonUtils
 
 class SimpleMotor:
     '''
@@ -11,8 +12,8 @@ class SimpleMotor:
     def __init__(self, setPower:Callable[[float], None], close:Callable[[], None]) -> None:
         '''
         Constructor.
-        - `setPower`: Callable for setting motor power.
-        - `close`: Callable for closing the motor.
+        - `setPower` Callable for setting motor power.
+        - `close` Callable for closing the motor.
         '''
         self._setPower = setPower
         self._close = close
@@ -22,12 +23,12 @@ class SimpleMotor:
         '''
         - `RETURNS` a new SimpleMotor that controls a TalonFX motor. The motor is
           registered with TalonUtils and FaultLogger.
-        - `motor`: TalonFX controller instance with device ID.
-        - `config`: TalonFXConfiguration to apply to the motor.
+        - `motor` TalonFX controller instance with device ID.
+        - `config` TalonFXConfiguration to apply to the motor.
         '''
-        # TODO finish faultlogger and talonutils
+        # TODO finish faultlogger
         # FaultLogger.registerTalon(motor)
-        # TalonUtils.addTalon(motor)
+        TalonUtils.addMotor(motor)
         motor.configurator.apply(config)
         return SimpleMotor(motor.set, motor.close)
     
