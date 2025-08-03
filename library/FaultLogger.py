@@ -14,7 +14,7 @@ from wpilib import DutyCycleEncoder
 from wpilib import PowerDistribution
 from typing import Callable, Optional
 # import org.photonvision.PhotonCamera;
-# import org.sciborgs1155.robot.Ports;
+from ports import Ports
 
 '''
 ref: https://github.com/SciBorgs/Hydrogen/blob/main/src/main/java/org/sciborgs1155/lib/FaultLogger.java
