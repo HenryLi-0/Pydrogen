@@ -1,6 +1,6 @@
 from wpilib import DigitalInput
 from typing import Callable
-from LoggingUtils import Log
+from library.LoggingUtils import Log
 
 '''
 ref: https://github.com/SciBorgs/Hydrogen/blob/main/src/main/java/org/sciborgs1155/lib/FaultLogger.java
