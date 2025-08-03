@@ -8,102 +8,118 @@ FaultLogger allows for faults to be logged and displayed.
 '''
 
 class FaultType:
-    INFO = 0
-    WARNING = 1
-    ERROR = 2
+  INFO = 0
+  WARNING = 1
+  ERROR = 2
+
+# kinda memory inefficient? (this is supposed to mimic a record)
+class Fault:
+  def __init__(self, name:str, description:str, typ:FaultType):
+    self.name = name
+    self.desc = description
+    self.typ = typ
+  def toString(self) -> str:
+    return self.name + ": " + self.desc
     
 class Alerts:
-    table:ntcore.NetworkTable = None
-    errors:ntcore.StringArrayPublisher = None
-    warnings:ntcore.StringArrayPublisher = None
-    infos:ntcore.StringArrayPublisher = None
-    def __init__(base:ntcore.NetworkTable, name:str):
-        Alerts.table = base.getSubTable(name)
-        Alerts.table.getStringTopic(".type").publish().set("Alerts")
-        Alerts.errors = Alerts.table.getStringArrayTopic("errors").publish()
-        Alerts.warnings = Alerts.table.getStringArrayTopic("warnings").publish()
-        Alerts.infos = Alerts.table.getStringArrayTopic("infos").publish()
-    
-    def set() -> None:
-        # public void set(Set<Fault> faults) {
-        #   errors.set(filteredStrings(faults, FaultType.ERROR));
-        #   warnings.set(filteredStrings(faults, FaultType.WARNING));
-        #   infos.set(filteredStrings(faults, FaultType.INFO));
-        # }
-        pass
+  table:ntcore.NetworkTable = None
+  errors:ntcore.StringArrayPublisher = None
+  warnings:ntcore.StringArrayPublisher = None
+  infos:ntcore.StringArrayPublisher = None
+  def __init__(base:ntcore.NetworkTable, name:str):
+    Alerts.table = base.getSubTable(name)
+    Alerts.table.getStringTopic(".type").publish().set("Alerts")
+    Alerts.errors = Alerts.table.getStringArrayTopic("errors").publish()
+    Alerts.warnings = Alerts.table.getStringArrayTopic("warnings").publish()
+    Alerts.infos = Alerts.table.getStringArrayTopic("infos").publish()
 
-    def reset() -> None:
-        Alerts.errors.close()
-        Alerts.warnings.close()
-        Alerts.infos.close()
-        Alerts.table.getStringArrayTopic("errors").publish()
-        Alerts.table.getStringArrayTopic("warnings").publish()
-        Alerts.table.getStringArrayTopic("infos").publish()
+  def set(faults:list[Fault]) -> None:
+    Alerts.errors.set(FaultLogger.filteredStrings(faults, FaultType.ERROR))
+    Alerts.warnings.set(FaultLogger.filteredStrings(faults, FaultType.WARNING))
+    Alerts.infos.set(FaultLogger.filteredStrings(faults, FaultType.INFO))
+
+  def reset() -> None:
+    Alerts.errors.close()
+    Alerts.warnings.close()
+    Alerts.infos.close()
+    Alerts.table.getStringArrayTopic("errors").publish()
+    Alerts.table.getStringArrayTopic("warnings").publish()
+    Alerts.table.getStringArrayTopic("infos").publish()
         
 
 class FaultLogger:
-    '''
-    [ref](https://github.com/SciBorgs/Hydrogen/blob/main/src/main/java/org/sciborgs1155/lib/FaultLogger.java)
+  '''
+  [ref](https://github.com/SciBorgs/Hydrogen/blob/main/src/main/java/org/sciborgs1155/lib/FaultLogger.java)
+  
+  FaultLogger allows for faults to be logged and displayed.
+  '''
+  # DATA
+  faultReporters = [] #:list[whats the python equivalent of a supplier and optional???]
+  activeFaults:set[Fault] = []
+  totalFaults:set[Fault] = []
+
+  # NETWORK TABLES
+  base:ntcore.NetworkTable = ntcore.NetworkTableInstance.getDefault().getTable("Faults");
+  activeAlerts:Alerts = Alerts(base, "Active Faults")
+  totalAlerts:Alerts = Alerts(base, "Total Faults")
+
+  @staticmethod
+  def update() -> None:
+    '''Polls registered fallibles. This method should be called periodically.'''
+    for fault in FaultLogger.faultReporters:
+      # ???
+      # TODO
+      # faultReporters.forEach(r -> r.get().ifPresent(fault -> report(fault)));
+      pass
+
+    for fault in FaultLogger.activeFaults:
+      FaultLogger.totalFaults.append(fault)
     
-    FaultLogger allows for faults to be logged and displayed.
+    FaultLogger.activeAlerts.set(FaultLogger.activeFaults)
+    FaultLogger.totalAlerts.set(FaultLogger.totalFaults)
+
+    FaultLogger.activeFaults.clear()
+  
+  @staticmethod
+  def clear() -> None:
+    '''Clears total faults.'''
+    FaultLogger.totalFaults.clear()
+    FaultLogger.activeFaults.clear()
+
+    FaultLogger.totalAlerts.reset()
+    FaultLogger.activeAlerts.reset()
+  
+  @staticmethod
+  def unregisterAll() -> None:
+    '''Clears fault suppliers.'''
+    FaultLogger.faultReporters.clear()
+  
+  @staticmethod
+  def getActiveFaults() -> set[Fault]:
     '''
-    pass
+    Returns the set of all current faults.
+    - `RETURNS` The set of all current faults.
+    '''
+    return FaultLogger.activeFaults
+  
+  @staticmethod
+  def getTotalFaults() -> set[Fault]:
+    '''
+    Returns the set of all total faults.
+    - `RETURNS` The set of all total faults.
+    '''
+    return FaultLogger.totalFaults
+
+  @staticmethod
+  def filteredStrings(faults:set[Fault], typ:FaultType) -> list[str]:
+    '''
+    Returns an array of descriptions of all faults that match the specified type.
+    - `type` The type to filter for.
+    - `RETURNS` An array of description strings.
+    '''
+    return [fault.toString() for fault in faults if fault.typ == typ]
 
 '''
-  // DATA
-  private static final List<Supplier<Optional<Fault>>> faultReporters = new ArrayList<>();
-  private static final Set<Fault> activeFaults = new HashSet<>();
-  private static final Set<Fault> totalFaults = new HashSet<>();
-
-  // NETWORK TABLES
-  private static final NetworkTable base = NetworkTableInstance.getDefault().getTable("Faults");
-  private static final Alerts activeAlerts = new Alerts(base, "Active Faults");
-  private static final Alerts totalAlerts = new Alerts(base, "Total Faults");
-
-  /** Polls registered fallibles. This method should be called periodically. */
-  public static void update() {
-    faultReporters.forEach(r -> r.get().ifPresent(fault -> report(fault)));
-
-    totalFaults.addAll(activeFaults);
-
-    activeAlerts.set(activeFaults);
-    totalAlerts.set(totalFaults);
-
-    activeFaults.clear();
-  }
-
-  /** Clears total faults. */
-  public static void clear() {
-    totalFaults.clear();
-    activeFaults.clear();
-
-    totalAlerts.reset();
-    activeAlerts.reset();
-  }
-
-  /** Clears fault suppliers. */
-  public static void unregisterAll() {
-    faultReporters.clear();
-  }
-
-  /**
-   * Returns the set of all current faults.
-   *
-   * @return The set of all current faults.
-   */
-  public static Set<Fault> activeFaults() {
-    return activeFaults;
-  }
-
-  /**
-   * Returns the set of all total faults.
-   *
-   * @return The set of all total faults.
-   */
-  public static Set<Fault> totalFaults() {
-    return totalFaults;
-  }
-
   /**
    * Reports a fault.
    *
