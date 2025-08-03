@@ -1,5 +1,6 @@
 from wpilib import DigitalInput
 from typing import Callable
+from LoggingUtils import Log
 
 '''
 ref: https://github.com/SciBorgs/Hydrogen/blob/main/src/main/java/org/sciborgs1155/lib/FaultLogger.java
@@ -31,6 +32,7 @@ class Beambreak:
         '''
         return Beambreak(lambda: True, lambda: None)
     
+    @Log
     def get(self) -> bool:
         '''
         - `RETURNS` the value of the beambreak; true for unbroken, false for broken
