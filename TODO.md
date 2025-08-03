@@ -6,6 +6,8 @@ Setup
 - read docs on robotpy document structure (if any)
 - setup stuff
 - read about robotpy workflow (how to deploy etc.)
+    - `py -3 -m robotpy sync`
+    - [deploy](https://docs.wpilib.org/en/stable/docs/software/python/subcommands/deploy.html)
 
 Basic Code
 - structure files
