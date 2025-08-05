@@ -2,6 +2,9 @@ from wpimath.geometry import Rotation2d
 from wpimath.geometry import Rotation3d
 from library.MathUtils import VectorN2
 
+'''
+ref: https://github.com/SciBorgs/Hydrogen/blob/main/src/main/java/org/sciborgs1155/robot/drive/GyroIO.java
+'''
 
 class GyroIO:
   '''Generalized gyroscope.'''
@@ -21,10 +24,10 @@ class GyroIO:
     '''Returns the heading of the robot as a Rotation3d.'''
     pass
 
-  def acceleration() -> VectorN2:
+  def acceleration(self) -> VectorN2:
     '''Returns the acceleration of the robot as a Vector.'''
     pass
 
-  def reset(heading:Rotation2d) -> None:
+  def reset(self, heading:Rotation2d) -> None:
     '''Resets heading to 0.'''
     pass

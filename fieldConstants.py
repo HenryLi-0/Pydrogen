@@ -1,16 +1,15 @@
-from library.MathUtils import *
+from wpimath.units import *
 from library.MathUtils import KRotation2d
+from library.MathUtils import Convert
+from library.MathUtils import VectorN2
 from constants import alliance
 
-# import edu.wpi.first.math.VecBuilder;
-# import edu.wpi.first.math.Vector;
 from wpimath.geometry import Pose2d
 from wpimath.geometry import Pose3d
 from wpimath.geometry import Rotation2d
 from wpimath.geometry import Rotation3d
 from wpimath.geometry import Transform2d
 from wpimath.geometry import Translation2d
-# import edu.wpi.first.math.numbers.N2;
 from wpilib import DriverStation
 
 '''
@@ -27,14 +26,14 @@ def inField(pose:Pose3d) -> bool:
     '''Returns whether the provided position is within the boundaries of the field.'''
     return pose.X() > 0 and pose.X() < LENGTH * Convert.kCentimetersInMeters and pose.Y() > 0 and pose.Y() < WIDTH * Convert.kCentimetersInMeters
 
-def fromPolarCoords(magnitude:float, direction:Rotation2d) -> list[float]:
+def fromPolarCoords(magnitude:float, direction:Rotation2d) -> VectorN2:
     '''
     Creates a Vector from polar coordinates.
     - `magnitude` The magnitude of the vector.
     - `direction` The direction of the vector.
     - `RETURNS` A vector (2 float list) from the given polar coordinates.
     '''
-    return [magnitude * direction.cos(), magnitude * direction.sin()]
+    return VectorN2(magnitude * direction.cos(), magnitude * direction.sin())
 
 def allianceReflect(pose:Pose2d) -> Pose2d:
     '''
