@@ -13,6 +13,10 @@ from wpimath.geometry import Translation2d
 # import edu.wpi.first.math.numbers.N2;
 from wpilib import DriverStation
 
+'''
+ref: https://github.com/SciBorgs/Hydrogen/blob/main/src/main/java/org/sciborgs1155/robot/FieldConstants.java
+'''
+
 # TODO: is this cursed? idk the wpilib python equivalent of java units library
 
 # Origin at corner of blue alliance side of field
