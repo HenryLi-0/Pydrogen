@@ -5,6 +5,7 @@ from phoenix6.hardware import TalonFX
 # import com.revrobotics.REVLibError;
 # import com.revrobotics.spark.SparkBase;
 # import com.studica.frc.AHRS;
+from phoenix6.hardware import Pigeon2
 from hal import PowerDistributionFaults
 from ntcore import NetworkTable
 from ntcore import NetworkTableInstance
@@ -452,6 +453,100 @@ class FaultLogger:
     return true;
   }
   '''
+
+  @staticmethod
+  def registerPigeon(pigeon:Pigeon2) -> None:
+    '''
+    Registers fault suppliers for a pigeon2.
+    - `pigeon` The pigeon2 to manage.
+    '''
+    nickname:str = Ports.idToName[pigeon.device_id]
+    FaultLogger.registerSupplierData(
+      lambda: pigeon.get_fault_boot_during_enable().value(),
+      "CANcoder {}".format(nickname),
+      "Device boot while detecting the enable signal.",
+      FaultType.ERROR
+    )
+    FaultLogger.registerSupplierData(
+      lambda: pigeon.get_fault_boot_into_motion().value(),
+      "CANcoder {}".format(nickname),
+      "Motion detected during bootup.",
+      FaultType.ERROR
+    )
+    FaultLogger.registerSupplierData(
+      lambda: pigeon.get_fault_bootup_accelerometer().value(),
+      "CANcoder {}".format(nickname),
+      "Accelerometer bootup checks failed.",
+      FaultType.ERROR
+    )
+    FaultLogger.registerSupplierData(
+      lambda: pigeon.get_fault_bootup_gyroscope().value(),
+      "CANcoder {}".format(nickname),
+      "Gyroscope bootup checks failed.",
+      FaultType.ERROR
+    )
+    FaultLogger.registerSupplierData(
+      lambda: pigeon.get_fault_bootup_magnetometer().value(),
+      "CANcoder {}".format(nickname),
+      "Magnetometer bootup checks failed.",
+      FaultType.ERROR
+    )
+    FaultLogger.registerSupplierData(
+      lambda: pigeon.get_fault_data_acquired_late().value(),
+      "CANcoder {}".format(nickname),
+      "Motion stack data acquisition was slower than expected.",
+      FaultType.ERROR
+    )
+    FaultLogger.registerSupplierData(
+      lambda: pigeon.get_fault_field().value(),
+      "CANcoder {}".format(nickname),
+      "Integer representing all fault flags reported by the device.",
+      FaultType.ERROR
+    )
+    FaultLogger.registerSupplierData(
+      lambda: pigeon.get_fault_hardware().value(),
+      "CANcoder {}".format(nickname),
+      "Hardware fault occured.",
+      FaultType.ERROR
+    )
+    FaultLogger.registerSupplierData(
+      lambda: pigeon.get_fault_loop_time_slow().value(),
+      "CANcoder {}".format(nickname),
+      "Motion stack loop time was slower than expected.",
+      FaultType.ERROR
+    )
+    FaultLogger.registerSupplierData(
+      lambda: pigeon.get_fault_saturated_accelerometer().value(),
+      "CANcoder {}".format(nickname),
+      "Accelerometer values are saturated.",
+      FaultType.ERROR
+    )
+    FaultLogger.registerSupplierData(
+      lambda: pigeon.get_fault_saturated_gyroscope().value(),
+      "CANcoder {}".format(nickname),
+      "Gyroscope values are saturated.",
+      FaultType.ERROR
+    )
+    FaultLogger.registerSupplierData(
+      lambda: pigeon.get_fault_saturated_magnetometer().value(),
+      "CANcoder {}".format(nickname),
+      "Magnetometer values are saturated.",
+      FaultType.ERROR
+    )
+    FaultLogger.registerSupplierData(
+      lambda: pigeon.get_fault_undervoltage().value(),
+      "CANcoder {}".format(nickname),
+      "Device supply voltage dropped to near brownout levels.",
+      FaultType.ERROR
+    )
+    FaultLogger.registerSupplierData(
+      lambda: pigeon.get_fault_unlicensed_feature_in_use().value(),
+      "CANcoder {}".format(nickname),
+      "An unlicensed feature is in use, device may not behave as expected.",
+      FaultType.ERROR
+    )
+
+
 
   @staticmethod
   def filteredStrings(faults:set[Fault], typ:FaultType) -> list[str]:

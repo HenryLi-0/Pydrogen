@@ -10,7 +10,7 @@ class Ports:
         DRIVER:int = 1
     
     class Drive:
-        CANANDGYRO:int = 20
+        GYRO:int = 20
         FRONT_LEFT_DRIVE:int = 11
         REAR_LEFT_DRIVE:int = 10
         FRONT_RIGHT_DRIVE:int = 12
