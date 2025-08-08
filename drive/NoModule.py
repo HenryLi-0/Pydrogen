@@ -6,6 +6,10 @@ from library.MathUtils import KRotation2d
 
 from drive.ModuleIO import ModuleIO
 
+'''
+ref: https://github.com/SciBorgs/Hydrogen/blob/main/src/main/java/org/sciborgs1155/robot/drive/NoModule.java
+'''
+
 class NoModule(ModuleIO):
 
     def name(self) -> str:

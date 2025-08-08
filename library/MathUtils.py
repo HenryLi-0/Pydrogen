@@ -23,6 +23,8 @@ class Convert:
     '''
     kCentimetersInMeters = 0.01
     kMetersInCentimeters = 100
+    kPerMinuteToPerSecond = 60
+    kPerSecondToPerMinute = 1/kPerMinuteToPerSecond
 
 class Vector:
     '''

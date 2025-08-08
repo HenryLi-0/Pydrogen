@@ -26,7 +26,7 @@ class FaultType:
   WARNING = 1
   ERROR = 2
 
-# kinda memory inefficient? (this is supposed to mimic a record)
+# TODO kinda memory inefficient? (this is supposed to mimic a record)
 class Fault:
   def __init__(self, name:str, description:str, typ:FaultType):
     self.name = name

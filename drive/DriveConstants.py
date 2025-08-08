@@ -1,191 +1,168 @@
+from wpimath.units import *
+from library.MathUtils import Convert
+from library.MathUtils import KRotation2d
+from math import pi
+from math import sqrt
 
+from wpimath.geometry import Rotation2d
+from wpimath.geometry import Rotation3d
+from wpimath.geometry import Translation2d
 
+'''
+ref: https://github.com/SciBorgs/Hydrogen/blob/main/src/main/java/org/sciborgs1155/robot/drive/DriveConstants.java
+'''
+
+'''
+Constants for our 2025 Swerve X2t drivetrain! All fields in this file should be updated for the
+current robot configuration!
+'''
 
 class ControlMode:
+    '''The type of control loop to use when controlling a module's drive motor.'''
     CLOSED_LOOP_VELOCITY = 0
     OPEN_LOOP_VELOCITY = 1
 
+# TODO kinda memory inefficient? (this is supposed to mimic a record)
+class FFConstants:
+  def __init__(self, kS:float, kV:float, kA:float):
+    self.kS = kS
+    self.kV = kV
+    self.kA = kA
 
-'''
-package org.sciborgs1155.robot.drive;
+class ModuleType:
+    '''The type of modules being used.'''
+    TALON = 0 # Kraken X60 Drive, Kraken X60 Turn
+    SPARK = 1 # NEO Vortex Drive, NEO 550 Turn
 
-import static edu.wpi.first.units.Units.*;
-import static java.lang.Math.PI;
+# TODO: Change central drivetrain constants as needed.
 
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Rotation3d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.AngularAcceleration;
-import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Current;
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.units.measure.LinearAcceleration;
-import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.units.measure.Time;
-import java.util.List;
+# The type of module on the chassis
+TYPE:ModuleType = ModuleType.TALON
 
-/**
- * Constants for our 2025 Swerve X2t drivetrain! All fields in this file should be updated for the
- * current robot configuration!
- */
-public final class DriveConstants {
-  /** The type of control loop to use when controlling a module's drive motor. */
-  public static enum ControlMode {
-    CLOSED_LOOP_VELOCITY,
-    OPEN_LOOP_VELOCITY;
-  }
+class Assisted:
+  # The angle between the velocity and the displacement from a target, above which the robot will
+  # not use assisted driving to the target. (the driver must be driving in the general direction
+  # of the assisted driving target.)
+  DRIVING_THRESHOLD:radians = radians(pi/6) 
 
-  public static record FFConstants(double kS, double kV, double kA) {}
+  # The input of the joystick beyond which the assisted driving will not control the rotation of
+  # the swerve.
+  ROTATING_THRESHOLD:float = 0.02
 
-  /** The type of modules being used. */
-  public static enum ModuleType {
-    TALON, // Kraken X60 Drive, Kraken X60 Turn
-    SPARK; // NEO Vortex Drive, NEO 550 Turn
-  }
+class Skid:
+  # TODO: find a value (3 is currently random, should change)
+  THRESHOLD:meters_per_second = meters_per_second(3)
 
-  // TODO: Change central drivetrain constants as needed.
+# The control loop used by all of the modules when driving
+DRIVE_MODE = ControlMode.OPEN_LOOP_VELOCITY
 
-  // The type of module on the chassis
-  public static final ModuleType TYPE = ModuleType.TALON;
+# Rate at which sensors update periodicially
+SENSOR_PERIOD:seconds = seconds(0.02)
 
-  public static final class Assisted {
-    // The angle between the velocity and the displacement from a target, above which the robot will
-    // not use assisted driving to the target. (the driver must be driving in the general direction
-    // of the assisted driving target.)
-    public static final Angle DRIVING_THRESHOLD = Radians.of(Math.PI / 6);
+# Distance between centers of right and left wheels on robot
+TRACK_WIDTH:meters = meters(0.5715)
+# Distance between front and back wheels on robot
+WHEEL_BASE:meters = meters(0.5715)
+# The radius of any swerve wheel
+WHEEL_RADIUS:inches = inches(1.5)
+# Distance from the center to any wheel of the robot
+# TODO check if this errors
+RADIUS:meters = (TRACK_WIDTH/2)*sqrt(2)
+# Coefficient of friction between the drive wheel and the carpet.
+WHEEL_COF:float = 1.0
+# Robot width with bumpers
+CHASSIS_WIDTH:inches = inches(32.645)
 
-    // The input of the joystick beyond which the assisted driving will not control the rotation of
-    // the swerve.
-    public static final double ROTATING_THRESHOLD = 0.02;
-  }
+# Maximum achievable translational and rotation velocities and accelerations of the robot.
+MAX_SPEED:meters_per_second = meters_per_second(5)
+MAX_ACCEL:meters_per_second_squared = meters_per_second_squared(40)
+MAX_SKID_ACCEL:meters_per_second_squared = meters_per_second_squared(38) # TODO: Tune
+MAX_TILT_ACCEL:meters_per_second_squared = meters_per_second_squared(12) # TODO: Tune
+MAX_ANGULAR_SPEED:radians_per_second = radians_per_second(MAX_ACCEL / RADIUS)
+MAX_ANGULAR_ACCEL:radians_per_second_squared = radians_per_second_squared(MAX_ACCEL / RADIUS)
 
-  public static final class Skid {
-    // TODO: find a value (3 is currently random, should change)
-    public static final LinearVelocity THRESHOLD = MetersPerSecond.of(3);
-  }
+# Arbitrary max rotational velocity for the driver to effectively control the robot
+TELEOP_ANGULAR_SPEED:radians_per_second = radians_per_second(2 * pi)
 
-  // The control loop used by all of the modules when driving
-  public static final ControlMode DRIVE_MODE = ControlMode.OPEN_LOOP_VELOCITY;
+MODULE_OFFSET:list[Translation2d] = [
+  Translation2d(WHEEL_BASE / 2, TRACK_WIDTH /  2), # front left
+  Translation2d(WHEEL_BASE / 2, TRACK_WIDTH / -2), # front right
+  Translation2d(WHEEL_BASE /-2, TRACK_WIDTH /  2), # rear left
+  Translation2d(WHEEL_BASE /-2, TRACK_WIDTH / -2)  # rear right
+]
 
-  // Rate at which sensors update periodicially
-  public static final Time SENSOR_PERIOD = Seconds.of(0.02);
+# angular offsets of the modules, since we use absolute encoders
+# ignored (used as 0) in simulation because the simulated robot doesn't have offsets
+ANGULAR_OFFSETS:list[Rotation2d] = [
+  KRotation2d.kZero, # front left
+  KRotation2d.kZero, # front right
+  KRotation2d.kZero, # rear left
+  KRotation2d.kZero  # rear right
+]
 
-  // Distance between centers of right and left wheels on robot
-  public static final Distance TRACK_WIDTH = Meters.of(0.5715);
-  // Distance between front and back wheels on robot
-  public static final Distance WHEEL_BASE = Meters.of(0.5715);
-  // The radius of any swerve wheel
-  public static final Distance WHEEL_RADIUS = Inches.of(1.5);
-  // Distance from the center to any wheel of the robot
-  public static final Distance RADIUS = TRACK_WIDTH.div(2).times(Math.sqrt(2));
-  // Coefficient of friction between the drive wheel and the carpet.
-  public static final double WHEEL_COF = 1.0;
-  // Robot width with bumpers
-  public static final Distance CHASSIS_WIDTH = Inches.of(32.645);
+GYRO_OFFSET:Rotation3d = Rotation3d(0, 0, pi)
 
-  // Maximum achievable translational and rotation velocities and accelerations of the robot.
-  public static final LinearVelocity MAX_SPEED = MetersPerSecond.of(5);
-  public static final LinearAcceleration MAX_ACCEL = MetersPerSecondPerSecond.of(40);
-  public static final LinearAcceleration MAX_SKID_ACCEL =
-      MetersPerSecondPerSecond.of(38); // TODO: Tune
-  public static final LinearAcceleration MAX_TILT_ACCEL =
-      MetersPerSecondPerSecond.of(12); // TODO: Tune
-  public static final AngularVelocity MAX_ANGULAR_SPEED =
-      RadiansPerSecond.of(MAX_SPEED.in(MetersPerSecond) / RADIUS.in(Meters));
-  public static final AngularAcceleration MAX_ANGULAR_ACCEL =
-      RadiansPerSecondPerSecond.of(MAX_ACCEL.in(MetersPerSecondPerSecond) / RADIUS.in(Meters));
+# TODO: Change ALL characterization constants for each unique robot as needed.
+class Translation:
+  P:float = 4.0
+  I:float = 0.0
+  D:float = 0.05
 
-  // Arbitrary max rotational velocity for the driver to effectively control the robot
-  public static final AngularVelocity TELEOP_ANGULAR_SPEED = RadiansPerSecond.of(2 * Math.PI);
+  TOLERANCE:meters = meters(1 * Convert.kCentimetersInMeters)
 
-  public static final Translation2d[] MODULE_OFFSET = {
-    new Translation2d(WHEEL_BASE.div(2), TRACK_WIDTH.div(2)), // front left
-    new Translation2d(WHEEL_BASE.div(2), TRACK_WIDTH.div(-2)), // front right
-    new Translation2d(WHEEL_BASE.div(-2), TRACK_WIDTH.div(2)), // rear left
-    new Translation2d(WHEEL_BASE.div(-2), TRACK_WIDTH.div(-2)) // rear right
-  };
+class Rotation:
+  P:float = 4.5
+  I:float = 0.0
+  D:float = 0.05
 
-  // angular offsets of the modules, since we use absolute encoders
-  // ignored (used as 0) in simulation because the simulated robot doesn't have offsets
-  public static final List<Rotation2d> ANGULAR_OFFSETS =
-      List.of(
-          Rotation2d.kZero, // front left
-          Rotation2d.kZero, // front right
-          Rotation2d.kZero, // rear left
-          Rotation2d.kZero // rear right
-          );
+  TOLERANCE:degrees = degrees(2)
 
-  public static final Rotation3d GYRO_OFFSET = new Rotation3d(0, 0, Math.PI);
+class ModuleConstants:
+  COUPLING_RATIO:float = 0
+  
+  class Driving:
+    CIRCUMFERENCE:meters = WHEEL_RADIUS * 2 * pi
 
-  // TODO: Change ALL characterization constants for each unique robot as needed.
-  public static final class Translation {
-    public static final double P = 4.0;
-    public static final double I = 0.0;
-    public static final double D = 0.05;
+    GEARING:float = 5.68
 
-    public static final Distance TOLERANCE = Centimeters.of(1);
-  }
+    STATOR_LIMIT:amperes = amperes(80) # 120A max slip current
+    SUPPLY_LIMIT:amperes = amperes(70)
 
-  public static final class Rotation {
-    public static final double P = 4.5;
-    public static final double I = 0.0;
-    public static final double D = 0.05;
+    # these factors are for SparkModule only!
+    POSITION_FACTOR:meters = CIRCUMFERENCE * GEARING
+    VELOCITY_FACTOR:radians_per_second = radians_per_second(POSITION_FACTOR * Convert.kPerMinuteToPerSecond)
 
-    public static final Angle TOLERANCE = Degrees.of(2);
-  }
+    CURRENT_LIMIT:amperes = amperes(50)
+    
+    class PID:
+      P:float = 3.2
+      I:float = 0.0
+      D:float = 0.0
+    
+    FRONT_LEFT_FF:FFConstants = FFConstants(0.23328, 2.0243, 0.045604)
+    FRONT_RIGHT_FF:FFConstants = FFConstants(0.21459, 2.0025, 0.094773)
+    REAR_LEFT_FF:FFConstants = FFConstants(0.14362, 2.0942, 0.21547)
+    REAR_RIGHT_FF:FFConstants = FFConstants(0.15099, 1.9379, 0.30998)
 
-  public static final class ModuleConstants {
-    public static final double COUPLING_RATIO = 0;
+    FF_CONSTANTS:list[FFConstants] = [
+      FRONT_LEFT_FF, FRONT_RIGHT_FF, REAR_LEFT_FF, REAR_RIGHT_FF
+    ]
 
-    public static final class Driving {
-      public static final Distance CIRCUMFERENCE = WHEEL_RADIUS.times(2 * PI);
+  class Turning:
+    GEARING:float = 12.1
+    CANCODER_GEARING:float = 1
 
-      public static final double GEARING = 5.68;
+    CURRENT_LIMIT:amperes = amperes(20)
 
-      public static final Current STATOR_LIMIT = Amps.of(80); // 120A max slip current
-      public static final Current SUPPLY_LIMIT = Amps.of(70);
+    class PID:
+      P:float = 50
+      I:float = 0.0
+      D:float = 0.05
+    
+    # system constants only used in simulation
+    class FF:
+      S:float = 0.30817
+      V:float = 0.55
+      A:float = 0.03
 
-      // these factors are for SparkModule only!
-      public static final Distance POSITION_FACTOR = CIRCUMFERENCE.times(GEARING);
-      public static final LinearVelocity VELOCITY_FACTOR = POSITION_FACTOR.per(Minute);
 
-      public static final Current CURRENT_LIMIT = Amps.of(50);
-
-      public static final class PID {
-        public static final double P = 3.2;
-        public static final double I = 0.0;
-        public static final double D = 0.0;
-      }
-
-      public static final FFConstants FRONT_RIGHT_FF = new FFConstants(0.21459, 2.0025, 0.094773);
-      public static final FFConstants FRONT_LEFT_FF = new FFConstants(0.23328, 2.0243, 0.045604);
-      public static final FFConstants REAR_LEFT_FF = new FFConstants(0.14362, 2.0942, 0.21547);
-      public static final FFConstants REAR_RIGHT_FF = new FFConstants(0.15099, 1.9379, 0.30998);
-
-      public static final List<FFConstants> FF_CONSTANTS =
-          List.of(FRONT_LEFT_FF, FRONT_RIGHT_FF, REAR_LEFT_FF, REAR_RIGHT_FF);
-    }
-
-    static final class Turning {
-      public static final double GEARING = 12.1;
-      public static final double CANCODER_GEARING = 1;
-
-      public static final Current CURRENT_LIMIT = Amps.of(20);
-
-      public static final class PID {
-        public static final double P = 50;
-        public static final double I = 0.0;
-        public static final double D = 0.05;
-      }
-
-      // system constants only used in simulation
-      public static final class FF {
-        public static final double S = 0.30817;
-        public static final double V = 0.55;
-        public static final double A = 0.03;
-      }
-    }
-  }
-}
-'''
