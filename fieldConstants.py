@@ -2,7 +2,7 @@ from wpimath.units import *
 from library.MathUtils import KRotation2d
 from library.MathUtils import Convert
 from library.MathUtils import VectorN2
-from constants import alliance
+from Constants import alliance
 
 from wpimath.geometry import Pose2d
 from wpimath.geometry import Pose3d

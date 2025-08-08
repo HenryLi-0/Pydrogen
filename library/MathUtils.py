@@ -1,6 +1,6 @@
 from wpimath.units import *
 from wpimath.geometry import Rotation2d
-import math
+from math import pi
 
 '''
 There is no Java version of this, this is just meant to add extra stuff 
@@ -23,8 +23,12 @@ class Convert:
     '''
     kCentimetersInMeters = 0.01
     kMetersInCentimeters = 100
+    
     kPerMinuteToPerSecond = 60
     kPerSecondToPerMinute = 1/kPerMinuteToPerSecond
+
+    kRotationsToRadians = 2*pi
+    kRadiansToRotations = 1/kRotationsToRadians
 
 class Vector:
     '''
