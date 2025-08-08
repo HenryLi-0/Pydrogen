@@ -146,6 +146,7 @@ class FaultLogger:
     - `desc` The description of the fault.
     - `typ` The type of the fault.
     '''
+    # TODO THIS CREATES A NEW FAULT EVERYTIME ITS CALLED! NOT INTENDED BEHAVIOR! BAD! BAD! BAD!
     FaultLogger.reportFault(Fault(name, desc, typ))
 
   @staticmethod
