@@ -53,7 +53,7 @@ class ModuleIO:
         '''
         pass
 
-    def state(self) -> SwerveModulePosition:
+    def state(self) -> SwerveModuleState:
         '''
         Returns the current state of the module.
         - `RETURNS` The current state of the module.
