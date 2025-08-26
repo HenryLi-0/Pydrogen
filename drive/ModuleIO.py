@@ -114,6 +114,6 @@ class ModuleIO:
         '''
         pass
     
-    def close(self):
+    def close(self) -> None:
         # TODO autoclosable
         pass
