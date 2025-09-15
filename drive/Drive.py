@@ -1,5 +1,6 @@
 from wpimath.units import *
 from library.MathUtils import Convert
+from library.MathUtils import KRotation2d
 from library.MathUtils import Vector
 from library.MathUtils import VectorN2
 from math import atan2
@@ -12,6 +13,8 @@ from constants import TUNING
 from constants import allianceRotation
 from ports import *
 from drive.DriveConstants import *
+from drive.ModuleIO import ModuleIO
+from drive.GyroIO import GyroIO
 
 from phoenix6 import SignalLogger
 from wpimath.controller import PIDController
@@ -52,74 +55,78 @@ from drive.DriveConstants import Rotation
 from drive.DriveConstants import Skid
 from drive.DriveConstants import Translation
 
+
+
+class Drive(Subsystem): # TODO is this the subsystembase
+    def __init__(self):
+        # Modules
+        self.frontLeft:ModuleIO
+        self.frontRight:ModuleIO
+        self.rearLeft:ModuleIO
+        self.rearRight:ModuleIO
+
+        self.modules:list[ModuleIO]
+
+        self.modulesStalling:Callable[[], bool]
+
+        # Gyro
+        self.gyro:GyroIO
+        self.simRotation = KRotation2d.kZero
+
+        self.kinematics:SwerveDrive4Kinematics = SwerveDrive4Kinematics(MODULE_OFFSET)
+
+        # TODO TUNING CAPABILITIES
+        '''
+        // Translation PID Tuning
+        @NotLogged
+        private final DoubleEntry translationP =
+            Tuning.entry("Robot/tuning/drive/translation p", Translation.P);
+
+        @NotLogged
+        private final DoubleEntry translationI =
+            Tuning.entry("Robot/tuning/drive/translation i", Translation.I);
+
+        @NotLogged
+        private final DoubleEntry translationD =
+            Tuning.entry("Robot/tuning/drive/translation d", Translation.D);
+
+        // Rotation PID Tuning
+        @NotLogged
+        private final DoubleEntry rotationP = Tuning.entry("Robot/tuning/drive/rotation p", Rotation.P);
+
+        @NotLogged
+        private final DoubleEntry rotationI = Tuning.entry("Robot/tuning/drive/rotation i", Rotation.I);
+
+        @NotLogged
+        private final DoubleEntry rotationD = Tuning.entry("Robot/tuning/drive/rotation d", Rotation.D);
+        
+        // Max acceleration and skid
+        @NotLogged
+        private final DoubleEntry maxAccel =
+            Tuning.entry("Robot/tuning/drive/Max Accel", MAX_ACCEL.in(MetersPerSecondPerSecond));
+        
+        @NotLogged private final DoubleEntry maxSkidAccel;
+
+        @NotLogged
+        private final DoubleEntry maxTiltAccel =
+            Tuning.entry(
+                "Robot/tuning/drive/Max Tilt Accel", MAX_TILT_ACCEL.in(MetersPerSecondPerSecond));
+        '''
+
+        # Odometry and pose estimation
+        self.odometry:SwerveDrive4PoseEstimator
+
+        self.field2d:Field2d = Field2d()
+        
+        self.modules2d:list[FieldObject2d]
+
+        # Characterization routines
+        self.translationCharacterization:SysIdRoutine
+        self.rotationalCharacterization:SysIdRoutine
+
+        # Movement automation
+
 '''
-public class Drive extends SubsystemBase implements AutoCloseable {
-  // Modules
-  private final ModuleIO frontLeft;
-  private final ModuleIO frontRight;
-  private final ModuleIO rearLeft;
-  private final ModuleIO rearRight;
-
-  private final List<ModuleIO> modules;
-
-  private final BooleanSupplier[] modulesStalling;
-
-  // Gyro, navX2-MXP
-  private final GyroIO gyro;
-  @Logged private static Rotation2d simRotation = Rotation2d.kZero;
-
-  public final SwerveDriveKinematics kinematics = new SwerveDriveKinematics(MODULE_OFFSET);
-
-  // Translation PID Tuning
-  @NotLogged
-  private final DoubleEntry translationP =
-      Tuning.entry("Robot/tuning/drive/translation p", Translation.P);
-
-  @NotLogged
-  private final DoubleEntry translationI =
-      Tuning.entry("Robot/tuning/drive/translation i", Translation.I);
-
-  @NotLogged
-  private final DoubleEntry translationD =
-      Tuning.entry("Robot/tuning/drive/translation d", Translation.D);
-
-  // Rotation PID Tuning
-  @NotLogged
-  private final DoubleEntry rotationP = Tuning.entry("Robot/tuning/drive/rotation p", Rotation.P);
-
-  @NotLogged
-  private final DoubleEntry rotationI = Tuning.entry("Robot/tuning/drive/rotation i", Rotation.I);
-
-  @NotLogged
-  private final DoubleEntry rotationD = Tuning.entry("Robot/tuning/drive/rotation d", Rotation.D);
-
-  // Max acceleration and skid
-  @NotLogged
-  private final DoubleEntry maxAccel =
-      Tuning.entry("Robot/tuning/drive/Max Accel", MAX_ACCEL.in(MetersPerSecondPerSecond));
-
-  @NotLogged private final DoubleEntry maxSkidAccel;
-
-  @NotLogged
-  private final DoubleEntry maxTiltAccel =
-      Tuning.entry(
-          "Robot/tuning/drive/Max Tilt Accel", MAX_TILT_ACCEL.in(MetersPerSecondPerSecond));
-
-  // Odometry and pose estimation
-  private final SwerveDrivePoseEstimator odometry;
-
-  // Faster Odometry
-  private SwerveModulePosition[] lastPositions;
-  private Rotation2d lastHeading;
-  public static final ReentrantLock lock = new ReentrantLock();
-
-  @Logged private final Field2d field2d = new Field2d();
-  private final FieldObject2d[] modules2d;
-
-  // Characterization routines
-  private final SysIdRoutine translationCharacterization;
-  private final SysIdRoutine rotationalCharacterization;
-
   // Movement automation
   @Logged
   private final ProfiledPIDController translationController =
