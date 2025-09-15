@@ -2,7 +2,9 @@
 
 **CURRENTLY WIP**
 
-This could (in theory) one day be used on an actual swerve chassis, but is currently **being worked on**. Theoretically, this *should* be done by the end of August, but we'll see. The idea is that I could revisit all the files in the original Hydrogen, while also learning `robotpy` and creating something useful for some python teams. And also maybe figuring out how to help any python teams in real life out there?
+This could (in theory) one day be used on an actual swerve chassis, but is currently **being worked on**. Theoretically, this *should* be done by the end of August (spoilers, it was not), but we'll see. The idea is that I could revisit all the files in the original Hydrogen, while also learning `robotpy` and creating something useful for some python teams. And also maybe figuring out how to help any python teams in real life out there?
+
+**(i do not actually intend on actually switching to python (python for FRC is just really unsupported by a lot of vendors as of now), but i just thought of the pun and found it funny)**
 
 ---
 
