@@ -1,94 +1,58 @@
 from wpimath.units import *
 from library.MathUtils import Convert
+from library.MathUtils import Vector
+from library.MathUtils import VectorN2
 from math import atan2
 
+from library.Assertion import *
+from library.LoggingUtils import *
+from library.FaultLogger import *
+from constants import PERIOD
+from constants import TUNING
+from constants import allianceRotation
+from ports import *
+from drive.DriveConstants import *
+
+from phoenix6 import SignalLogger
+from wpimath.controller import PIDController
+from wpimath.controller import ProfiledPIDController # TODO check if radians variant
+from wpimath.estimator import SwerveDrive4PoseEstimator # TODO does this mean 4 wheel?
+from wpimath.filter import Debouncer
+from wpimath.geometry import Pose2d
+from wpimath.geometry import Pose3d
+from wpimath.geometry import Rotation2d
+from wpimath.geometry import Transform2d
+from wpimath.geometry import Translation2d
+from wpimath.kinematics import ChassisSpeeds
+from wpimath.kinematics import SwerveDrive4Kinematics
+from wpimath.kinematics import SwerveModulePosition
+from wpimath.kinematics import SwerveModuleState
+from wpimath.trajectory import TrapezoidProfile # TODO again, check radians varient
+
+from ntcore import DoubleEntry
+
+from wpilib import SmartDashboard
+from wpilib import Field2d
+from wpilib import FieldObject2d
+from wpilib import SmartDashboard
+from commands2 import Command
+from commands2 import Subsystem
+from commands2.button import Trigger
+from commands2.sysid import SysIdRoutine
+
+from typing import Optional
+from typing import Callable
+
+from constants import *
+from fieldConstants import *
+from drive.DriveConstants import Assisted
+from drive.DriveConstants import ControlMode
+from drive.DriveConstants import ModuleConstants
+from drive.DriveConstants import Rotation
+from drive.DriveConstants import Skid
+from drive.DriveConstants import Translation
 
 '''
-package org.sciborgs1155.robot.drive;
-
-import static edu.wpi.first.units.Units.Meters;
-import static edu.wpi.first.units.Units.MetersPerSecond;
-import static edu.wpi.first.units.Units.MetersPerSecondPerSecond;
-import static edu.wpi.first.units.Units.Radians;
-import static edu.wpi.first.units.Units.Seconds;
-import static edu.wpi.first.units.Units.Volts;
-import static java.lang.Math.atan;
-import static org.sciborgs1155.lib.Assertion.*;
-import static org.sciborgs1155.lib.LoggingUtils.*;
-import static org.sciborgs1155.robot.Constants.PERIOD;
-import static org.sciborgs1155.robot.Constants.TUNING;
-import static org.sciborgs1155.robot.Constants.allianceRotation;
-import static org.sciborgs1155.robot.Ports.Drive.*;
-import static org.sciborgs1155.robot.drive.DriveConstants.*;
-
-import choreo.trajectory.SwerveSample;
-import com.ctre.phoenix6.SignalLogger;
-import edu.wpi.first.epilogue.Logged;
-import edu.wpi.first.epilogue.NotLogged;
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.Vector;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.filter.Debouncer.DebounceType;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
-import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
-import edu.wpi.first.math.kinematics.SwerveModulePosition;
-import edu.wpi.first.math.kinematics.SwerveModuleState;
-import edu.wpi.first.math.numbers.N2;
-import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.math.trajectory.TrapezoidProfile;
-import edu.wpi.first.math.util.Units;
-import edu.wpi.first.networktables.DoubleEntry;
-import edu.wpi.first.units.measure.Angle;
-import edu.wpi.first.units.measure.Distance;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import java.util.Arrays;
-import java.util.DoubleSummaryStatistics;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.BooleanSupplier;
-import java.util.function.DoubleSupplier;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import org.photonvision.EstimatedRobotPose;
-import org.sciborgs1155.lib.Assertion;
-import org.sciborgs1155.lib.Assertion.EqualityAssertion;
-import org.sciborgs1155.lib.Assertion.TruthAssertion;
-import org.sciborgs1155.lib.FaultLogger;
-import org.sciborgs1155.lib.FaultLogger.FaultType;
-import org.sciborgs1155.lib.InputStream;
-import org.sciborgs1155.lib.Test;
-import org.sciborgs1155.lib.Tracer;
-import org.sciborgs1155.lib.Tuning;
-import org.sciborgs1155.robot.Constants;
-import org.sciborgs1155.robot.FieldConstants;
-import org.sciborgs1155.robot.Robot;
-import org.sciborgs1155.robot.drive.DriveConstants.Assisted;
-import org.sciborgs1155.robot.drive.DriveConstants.ControlMode;
-import org.sciborgs1155.robot.drive.DriveConstants.ModuleConstants.Driving;
-import org.sciborgs1155.robot.drive.DriveConstants.Rotation;
-import org.sciborgs1155.robot.drive.DriveConstants.Skid;
-import org.sciborgs1155.robot.drive.DriveConstants.Translation;
-import org.sciborgs1155.robot.vision.Vision.PoseEstimate;
-
 public class Drive extends SubsystemBase implements AutoCloseable {
   // Modules
   private final ModuleIO frontLeft;

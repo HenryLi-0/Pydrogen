@@ -12,7 +12,7 @@ from wpimath.kinematics import SwerveModuleState
 from wpimath.system.plant import DCMotor
 from wpimath.system.plant import LinearSystemId
 from wpilib.simulation import DCMotorSim
-import Constants
+import constants
 from drive.DriveConstants import ControlMode
 from drive.DriveConstants import ModuleConstants
 
